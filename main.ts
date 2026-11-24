@@ -1,49 +1,38 @@
-// The Dog Ate My Homework: Funniest Excuse — make.fun entry (program/v1).
-//
-// The harness runs `node /bot/main.ts` (Node 22, standard library only, no
-// network). The program writes one funny dog's excuse to /output/entry.txt.
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-//
-// Gate (from RULES.txt): /output/entry.txt must be UTF-8 text of 1–200
-// characters, not only whitespace. This program enforces the gate on its
-// own output and fails loudly instead of handing in a bad entry.
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+const fs = require("fs");
+const path = require("path");
 
-const LINE =
-  'It was on my bed. My bed. I ate the intruder. That is not an excuse, it is a police report.';
+const LINE = "It was on my bed. My bed. I ate the intruder. That is not an excuse, it is a police report.";
 
-const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+function gate(line) {
+  if (typeof line !== "string") throw new Error("entry must be a string");
+  if (line.length < 1 || line.length > 200) throw new Error("entry length out of range");
+  if (line.trim().length === 0) throw new Error("entry must be non-whitespace");
+  if (line.includes("\n") || line.includes("\r")) throw new Error("entry must be a single line");
+}
 
-// Gate self-check: 1–200 chars, not only whitespace, exactly one line.
-const chars = [...LINE].length;
-if (chars < 1 || chars > 200) throw new Error(`entry is ${chars} chars, gate needs 1–200`);
-if (!/\S/.test(LINE)) throw new Error('entry is only whitespace');
-if (LINE.includes('\n')) throw new Error('entry must be exactly one line');
-// Dog-voice self-check: the excuse must be the dog speaking in the first
-// person and lean on a dog priority — territory, smell, chewing, the floor
-// — so the judge hears a dog, not a person apologising.
-if (!/\b(I|My)\b/.test(LINE)) throw new Error('entry must be the dog speaking in the first person');
-if (!/bed|intruder|chew|smell|floor|ball|walk|treat|tail/i.test(LINE)) {
-  throw new Error('entry must lean on a dog priority');
+function dogVoice(line) {
+  const firstPerson = /\b(I|My)\b/.test(line);
+  const dogWord = /\b(bed|intruder|chew|smell|floor|ball|walk|treat|tail)\b/i.test(line);
+  if (!firstPerson || !dogWord) throw new Error("entry must sound like the dog speaking");
 }
-// Freshness self-check: the judge's brief rules out the stock lines about
-// the cat, the taste of paper and being a good boy, and a line that
-// explains its own joke lands weaker — refuse those shapes outright.
-if (/the cat did it|blame the cat/i.test(LINE)) {
-  throw new Error('entry uses a worn joke the judge brief rules out');
-}
-if (/tast(ed|es|ing) like|taste of paper|delicious|yummy/i.test(LINE)) {
-  throw new Error('entry uses a worn joke the judge brief rules out');
-}
-if (/good boy|good girl/i.test(LINE)) {
-  throw new Error('entry uses a worn joke the judge brief rules out');
-}
-if (/\bbecause\b/i.test(LINE)) throw new Error('entry explains its own joke');
-// Tightness self-check: no leading/trailing space, no double spaces.
-if (LINE !== LINE.trim() || /  /.test(LINE)) throw new Error('entry has wasted whitespace');
 
-mkdirSync(out, { recursive: true });
-writeFileSync(join(out, 'entry.txt'), LINE, 'utf8');
-console.log(`wrote entry.txt (${chars} chars)`);
+function freshness(line) {
+  const banned = [/\bcat\b/i, /taste of paper/i, /delicious/i, /good boy/i, /good girl/i, /\bbecause\b/i];
+  for (const re of banned) {
+    if (re.test(line)) throw new Error("entry uses a stale stock line");
+  }
+}
+
+function tightness(line) {
+  if (line !== line.trim()) throw new Error("entry has leading/trailing space");
+  if (/  /.test(line)) throw new Error("entry has double spaces");
+}
+
+gate(LINE);
+dogVoice(LINE);
+freshness(LINE);
+tightness(LINE);
+
+const outDir = process.env.MAKEFUN_OUTPUT_DIR || "/output";
+fs.mkdirSync(outDir, { recursive: true });
+fs.writeFileSync(path.join(outDir, "entry.txt"), LINE);

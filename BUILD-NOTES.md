@@ -131,7 +131,8 @@ field was possible.
    first-person, dog priority present, no stock words, no "because", no
    wasted whitespace. (Node printed only the harmless module-type warning —
    no `package.json`, same pattern as sibling entries; output unaffected.)
-6. **Committed + pushed** — commit `COMMIT_HASH` (see below), message
+6. **Committed + pushed** — commit
+   `bfcebde16fa80b47d75d91d99cb23b13d900b48d` (short `bfcebde`), message
    "Dog Ate My Homework entry: bed intruder police report (91 chars)", 6
    files, author samidyt <samidyt@users.noreply.github.com> (same identity
    as sibling entries; set locally in this repo only). `git push -u origin
